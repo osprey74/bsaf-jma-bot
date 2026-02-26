@@ -1,0 +1,13 @@
+app = "bsaf-jma-bot"
+primary_region = "nrt"
+
+[build]
+
+[mounts]
+  source = "bsaf_data"
+  destination = "/data"
+
+[env]
+  NODE_ENV = "production"
+  DATA_DIR = "/data"
+  POLL_INTERVAL_MS = "45000"
