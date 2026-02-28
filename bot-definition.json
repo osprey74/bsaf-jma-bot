@@ -5,7 +5,7 @@
 
   "bot": {
     "handle": "jma-alert-bot.bsky.social",
-    "did": "",
+    "did": "did:plc:vwi7zhfyamyvrg5v6ycjgzxi",
     "name": "防災情報Bot（非公式）",
     "description": "気象庁の公開データに基づく防災情報",
     "source": "気象庁 防災情報XML",

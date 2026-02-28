@@ -1,0 +1,138 @@
+# bsaf-jma-bot
+
+**気象庁の防災情報をBlueskyに自動投稿する [BSAF](https://github.com/osprey74/bsaf-protocol) 対応Botです。**
+
+[@jma-alert-bot.bsky.social](https://bsky.app/profile/jma-alert-bot.bsky.social)
+
+---
+
+## 概要
+
+bsaf-jma-bot は気象庁の公開XMLフィードを監視し、防災情報をBSAFタグ付きでBlueskyに自動投稿します。BSAF対応クライアントでは、災害種別・重要度・地域によるフィルタリングが可能です。
+
+[BSAFプロトコル](https://github.com/osprey74/bsaf-protocol)のリファレンスBot実装です。
+
+## 対応災害種別
+
+| 種別 | ソースフィード | データソース |
+|:-----|:-------------|:-----------|
+| 地震 | eqvol.xml | 詳細XML |
+| 津波 | eqvol.xml | 詳細XML |
+| 噴火 | eqvol.xml | 詳細XML |
+| 降灰予報 | eqvol.xml | エントリ本文 |
+| 南海トラフ臨時情報 | eqvol.xml | 詳細XML |
+| 気象特別警報 | extra.xml | 詳細XML |
+| 気象警報 | extra.xml | 詳細XML / エントリ本文 |
+| 土砂災害警戒情報 | extra.xml | エントリ本文 |
+| 竜巻注意情報 | extra.xml | エントリ本文 |
+| 記録的短時間大雨情報 | extra.xml | エントリ本文 |
+
+## 優先度システム
+
+投稿は優先度順にソートされます。P0イベントは最小投稿間隔をバイパスし即時配信されます。
+
+| 優先度 | 対象 |
+|:-------|:-----|
+| **P0** | 大津波警報、南海トラフ臨時情報 |
+| **P1** | 津波警報・注意報、特別警報、噴火 |
+| **P2** | 震度5以上、土砂災害警戒情報 |
+| **P3** | 震度3-4、気象警報、竜巻注意情報、記録的大雨 |
+| **P4** | 震度1-2、降灰予報 |
+
+## アーキテクチャ
+
+```
+気象庁XMLフィード (eqvol.xml, extra.xml)
+  │  45秒間隔でポーリング
+  ▼
+Poller → Dispatcher → Parser → Formatter → Priority Sort → Bluesky API
+                                                │
+                                          DedupStore (SQLite)
+```
+
+## 技術スタック
+
+- **ランタイム:** Node.js 24+
+- **言語:** TypeScript
+- **Bluesky SDK:** @atproto/api
+- **XMLパーサー:** fast-xml-parser
+- **永続化:** better-sqlite3（重複排除）
+- **デプロイ:** Docker / Fly.io（東京 `nrt` リージョン）
+
+## セットアップ
+
+### 前提条件
+
+- Node.js 24+
+- [アプリパスワード](https://bsky.app/settings/app-passwords)を設定済みのBlueskyアカウント
+
+### インストール
+
+```bash
+git clone https://github.com/osprey74/bsaf-jma-bot.git
+cd bsaf-jma-bot
+npm install
+```
+
+### 設定
+
+`.env` ファイルを作成:
+
+```
+BLUESKY_IDENTIFIER=your-bot.bsky.social
+BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+```
+
+オプションの環境変数:
+
+| 変数 | デフォルト | 説明 |
+|:-----|:----------|:-----|
+| `BLUESKY_SERVICE` | `https://bsky.social` | Bluesky PDS URL |
+| `POLL_INTERVAL_MS` | `45000` | フィードポーリング間隔（ミリ秒） |
+| `DATA_DIR` | `./data` | SQLite DB・セッション用データディレクトリ |
+| `LOG_LEVEL` | `INFO` | ログレベル（`DEBUG`, `INFO`, `WARN`, `ERROR`） |
+
+### 実行
+
+```bash
+# 開発モード
+npm run dev
+
+# 本番モード
+npm run build
+npm start
+
+# ドライラン（投稿なし、フォーマット結果を表示）
+npx tsx src/dry-run.ts
+```
+
+### Fly.io へのデプロイ
+
+```bash
+npm run build
+fly deploy
+fly secrets set BLUESKY_IDENTIFIER=your-bot.bsky.social BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+```
+
+## BSAFタグ
+
+すべての投稿に6つの必須BSAFタグが付与されます:
+
+```
+bsaf:v1, type:earthquake, value:5+, time:2026-02-15T02:52:00Z, target:jp-kanto, source:jma
+```
+
+利用可能なフィルタオプションは [bot-definition.json](bot-definition.json) を参照してください。
+
+## データソース
+
+すべてのデータは[気象庁の防災情報XML](https://www.data.jma.go.jp/developer/xml/feed/)を出典としています。本Botは非公式であり、気象庁とは無関係です。
+
+## 関連プロジェクト
+
+- [BSAFプロトコル](https://github.com/osprey74/bsaf-protocol) — プロトコル仕様書
+- [kazahana](https://github.com/osprey74/kazahana) — BSAF対応 Blueskyデスクトップクライアント
+
+## ライセンス
+
+[MIT License](LICENSE)
