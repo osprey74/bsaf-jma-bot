@@ -5,10 +5,16 @@ import type {
   EruptionInfo,
   AshfallInfo,
   NankaiTroughInfo,
+  SpecialWarningInfo,
+  WeatherWarningInfo,
+  LandslideWarningInfo,
+  TornadoWarningInfo,
+  HeavyRainInfo,
 } from "../parser/types.js";
 import { prefCodesToTargetRegions } from "../utils/region-map.js";
 import { tsunamiAreasToTargets } from "../utils/tsunami-area-map.js";
 import { volcanoToTarget } from "../utils/volcano-map.js";
+import { extractTargetFromText } from "../utils/pref-name-map.js";
 import type { BsafPost } from "./bluesky.js";
 
 // ---- Shared helpers ----
@@ -376,6 +382,207 @@ export function formatNankaiTroughPost(info: NankaiTroughInfo): BsafPost | null 
     `value:${bsafValue}`,
     `time:${info.timeUtc}`,
     `target:${NANKAI_TARGETS[0]}`,
+    "source:jma",
+  ];
+
+  return { text, tags, langs: ["ja"] };
+}
+
+// ---- Step 3: Special Warning ----
+
+export function formatSpecialWarningPost(info: SpecialWarningInfo): BsafPost | null {
+  const targets = prefCodesToTargetRegions(info.prefCodes);
+  if (targets.length === 0) return null;
+
+  const emoji = getEmojiForValue("special-warning");
+  const displayTime = formatJstTime(info.reportDateTime);
+  const kindsStr = info.warningKinds.join("・");
+
+  const text = [
+    `${emoji} 【特別警報】${kindsStr}`,
+    `${displayTime}発表`,
+    `命を守る行動をとってください`,
+    `（出典：気象庁）`,
+  ].join("\n");
+
+  const tags = [
+    "bsaf:v1",
+    "type:special-warning",
+    "value:special-warning",
+    `time:${info.timeUtc}`,
+    `target:${targets[0]}`,
+    "source:jma",
+  ];
+
+  return { text, tags, langs: ["ja"] };
+}
+
+// ---- Step 3: Weather Warning ----
+
+export function formatWeatherWarningPost(info: WeatherWarningInfo): BsafPost | null {
+  // Determine target from prefCodes (XML) or prefName (content)
+  let target: string | null = null;
+  if (info.prefCodes.length > 0) {
+    const targets = prefCodesToTargetRegions(info.prefCodes);
+    if (targets.length > 0) target = targets[0];
+  }
+  if (!target && info.prefName) {
+    target = extractTargetFromText(info.prefName);
+  }
+  if (!target) return null;
+
+  // Skip advisory-only (should already be filtered by parser, but double-check)
+  if (info.highestLevel === "advisory") return null;
+
+  const bsafValue = info.highestLevel;
+  const emoji = getEmojiForValue(bsafValue);
+  const displayTime = formatJstTime(info.timeUtc);
+
+  const lines: string[] = [];
+
+  if (bsafValue === "special-warning") {
+    const kindsStr = info.warningKinds.length > 0 ? info.warningKinds.join("・") : "特別警報";
+    lines.push(`${emoji} 【特別警報】${kindsStr}`);
+  } else {
+    const kindsStr = info.warningKinds.length > 0 ? info.warningKinds.join("・") : "気象警報";
+    lines.push(`${emoji} ${kindsStr}`);
+  }
+
+  lines.push(`${displayTime}発表`);
+
+  // Add content summary if available
+  if (info.content) {
+    let contentText = info.content
+      .replace(/【.*?】\s*/, "")
+      .trim();
+    const maxContentLen = 200;
+    if ([...contentText].length > maxContentLen) {
+      contentText = [...contentText].slice(0, maxContentLen).join("") + "…";
+    }
+    if (contentText) lines.push(contentText);
+  }
+
+  lines.push(`（出典：気象庁）`);
+  const text = lines.join("\n");
+
+  const tags = [
+    "bsaf:v1",
+    "type:weather-warning",
+    `value:${bsafValue}`,
+    `time:${info.timeUtc}`,
+    `target:${target}`,
+    "source:jma",
+  ];
+
+  return { text, tags, langs: ["ja"] };
+}
+
+// ---- Step 3: Landslide Warning ----
+
+export function formatLandslideWarningPost(info: LandslideWarningInfo): BsafPost | null {
+  const target = extractTargetFromText(info.prefName);
+  if (!target) return null;
+
+  const emoji = getEmojiForValue("warning");
+  const displayTime = formatJstTime(info.timeUtc);
+
+  let contentText = info.content
+    .replace(/【.*?】\s*/, "")
+    .trim();
+  const maxContentLen = 220;
+  if ([...contentText].length > maxContentLen) {
+    contentText = [...contentText].slice(0, maxContentLen).join("") + "…";
+  }
+
+  const text = [
+    `${emoji} 土砂災害警戒情報`,
+    `${displayTime}発表`,
+    contentText,
+    `（出典：気象庁）`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const tags = [
+    "bsaf:v1",
+    "type:landslide-warning",
+    "value:warning",
+    `time:${info.timeUtc}`,
+    `target:${target}`,
+    "source:jma",
+  ];
+
+  return { text, tags, langs: ["ja"] };
+}
+
+// ---- Step 3: Tornado Warning ----
+
+export function formatTornadoWarningPost(info: TornadoWarningInfo): BsafPost | null {
+  const target = extractTargetFromText(info.prefName);
+  if (!target) return null;
+
+  const emoji = getEmojiForValue("warning");
+  const displayTime = formatJstTime(info.timeUtc);
+
+  let contentText = info.content
+    .replace(/【.*?】\s*/, "")
+    .trim();
+  const maxContentLen = 220;
+  if ([...contentText].length > maxContentLen) {
+    contentText = [...contentText].slice(0, maxContentLen).join("") + "…";
+  }
+
+  const text = [
+    `${emoji} 竜巻注意情報`,
+    `${displayTime}発表`,
+    contentText,
+    `（出典：気象庁）`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const tags = [
+    "bsaf:v1",
+    "type:tornado-warning",
+    "value:warning",
+    `time:${info.timeUtc}`,
+    `target:${target}`,
+    "source:jma",
+  ];
+
+  return { text, tags, langs: ["ja"] };
+}
+
+// ---- Step 3: Heavy Rain ----
+
+export function formatHeavyRainPost(info: HeavyRainInfo): BsafPost | null {
+  const target = extractTargetFromText(info.prefName);
+  if (!target) return null;
+
+  const emoji = getEmojiForValue("warning");
+
+  let contentText = info.content
+    .replace(/【.*?】\s*/, "")
+    .trim();
+  const maxContentLen = 230;
+  if ([...contentText].length > maxContentLen) {
+    contentText = [...contentText].slice(0, maxContentLen).join("") + "…";
+  }
+
+  const text = [
+    `${emoji} 記録的短時間大雨情報`,
+    contentText,
+    `（出典：気象庁）`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const tags = [
+    "bsaf:v1",
+    "type:heavy-rain",
+    "value:warning",
+    `time:${info.timeUtc}`,
+    `target:${target}`,
     "source:jma",
   ];
 

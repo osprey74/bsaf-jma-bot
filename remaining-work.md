@@ -20,11 +20,11 @@
 
 #### ステップ3 — 新規フィードの災害種別追加（`extra.xml`）
 
-- [ ] 気象特別警報の実装 — 詳細XMLパーサー (`parser/special-warning.ts`)、フォーマッター、BSAFタグ生成（`type:special-warning`, `value:special-warning`）
-- [ ] 気象警報・注意報の実装 — `entry.content` ベースのパーサー、フォーマッター、BSAFタグ生成（`type:weather-warning`, `value:advisory|warning|severe-warning`）
-- [ ] 土砂災害警戒情報の実装 — `entry.content` ベースのパーサー、フォーマッター、BSAFタグ生成（`type:landslide-warning`, `value:warning`）
-- [ ] 竜巻注意情報の実装 — `entry.content` ベースのパーサー、フォーマッター、BSAFタグ生成（`type:tornado-warning`, `value:warning`）
-- [ ] 記録的短時間大雨情報の実装 — `entry.content` ベースのパーサー、フォーマッター、BSAFタグ生成（`type:heavy-rain`, `value:warning`）
+- [x] 気象特別警報の実装 — 詳細XMLパーサー (`parser/special-warning.ts`)、フォーマッター、BSAFタグ生成（`type:special-warning`, `value:special-warning`）
+- [x] 気象警報・注意報の実装 — XML/contentハイブリッドパーサー (`parser/weather-warning.ts`)、フォーマッター、BSAFタグ生成（`type:weather-warning`, `value:advisory|warning|severe-warning|special-warning`）、投稿基準：警報以上
+- [x] 土砂災害警戒情報の実装 — `entry.content` ベースのパーサー (`parser/landslide-warning.ts`)、フォーマッター、BSAFタグ生成（`type:landslide-warning`, `value:warning`）
+- [x] 竜巻注意情報の実装 — `entry.content` ベースのパーサー (`parser/tornado-warning.ts`)、フォーマッター、BSAFタグ生成（`type:tornado-warning`, `value:warning`）
+- [x] 記録的短時間大雨情報の実装 — `entry.content` ベースのパーサー (`parser/heavy-rain.ts`)、フォーマッター、BSAFタグ生成（`type:heavy-rain`, `value:warning`）
 
 #### ステップ4 — 仕上げ
 

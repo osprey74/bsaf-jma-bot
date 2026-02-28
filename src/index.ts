@@ -8,12 +8,22 @@ import { parseTsunamiXml } from "./parser/tsunami.js";
 import { parseEruptionXml } from "./parser/eruption.js";
 import { parseAshfallContent } from "./parser/ashfall.js";
 import { parseNankaiTroughXml } from "./parser/nankai-trough.js";
+import { parseLandslideWarningContent } from "./parser/landslide-warning.js";
+import { parseTornadoWarningContent } from "./parser/tornado-warning.js";
+import { parseHeavyRainContent } from "./parser/heavy-rain.js";
+import { parseSpecialWarningXml } from "./parser/special-warning.js";
+import { parseWeatherWarningXml, parseWeatherWarningContent } from "./parser/weather-warning.js";
 import {
   formatEarthquakePost,
   formatTsunamiPost,
   formatEruptionPost,
   formatAshfallPost,
   formatNankaiTroughPost,
+  formatSpecialWarningPost,
+  formatWeatherWarningPost,
+  formatLandslideWarningPost,
+  formatTornadoWarningPost,
+  formatHeavyRainPost,
 } from "./poster/formatter.js";
 import { getAgent, postToBluesky } from "./poster/bluesky.js";
 import { DedupStore } from "./storage/dedup.js";
@@ -38,11 +48,24 @@ async function processEntry(entry: FeedEntry) {
     case "eruption":
       return processDetailXml(entry, parseEruptionXml, formatEruptionPost);
     case "ashfall":
-      return processAshfall(entry);
+      return processContent(entry, parseAshfallContent, formatAshfallPost);
     case "nankai-trough":
       return processDetailXml(entry, parseNankaiTroughXml, formatNankaiTroughPost);
 
-    // Step 3: special-warning, weather-warning, landslide-warning, tornado-warning, heavy-rain
+    // Step 3: extra.xml disaster types
+    case "landslide-warning":
+      return processContent(entry, parseLandslideWarningContent, formatLandslideWarningPost);
+    case "tornado-warning":
+      return processContent(entry, parseTornadoWarningContent, formatTornadoWarningPost);
+    case "heavy-rain":
+      return processContent(entry, parseHeavyRainContent, formatHeavyRainPost);
+    case "special-warning":
+      return processDetailXml(entry, parseSpecialWarningXml, formatSpecialWarningPost);
+    case "weather-warning":
+      if (entry.needsDetailXml) {
+        return processDetailXml(entry, parseWeatherWarningXml, formatWeatherWarningPost);
+      }
+      return processContent(entry, parseWeatherWarningContent, formatWeatherWarningPost);
 
     default:
       logger.info(
@@ -118,20 +141,24 @@ async function processDetailXml<T>(
   return post;
 }
 
-/** Process ashfall entry: parse from entry content (no detail XML needed). */
-async function processAshfall(entry: FeedEntry) {
-  const info = parseAshfallContent(entry.content, entry.title, entry.updated);
+/** Generic processor for disaster types parsed from entry content (no detail XML). */
+async function processContent<T>(
+  entry: FeedEntry,
+  parseFn: (content: string, title: string, updated: string) => T | null,
+  formatFn: (info: T) => import("./poster/bluesky.js").BsafPost | null,
+) {
+  const info = parseFn(entry.content, entry.title, entry.updated);
   if (!info) {
-    logger.warn("PARSE", `Parse returned null for ashfall ${entry.id}`, {
+    logger.warn("PARSE", `Parse returned null for ${entry.disasterType} ${entry.id}`, {
       title: entry.title,
       disasterType: entry.disasterType,
     });
     return null;
   }
 
-  const post = formatAshfallPost(info);
+  const post = formatFn(info);
   if (!post) {
-    logger.warn("FORMAT", `No target region for ashfall ${entry.id}`, {
+    logger.warn("FORMAT", `No target region for ${entry.disasterType} ${entry.id}`, {
       disasterType: entry.disasterType,
     });
     return null;

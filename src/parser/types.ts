@@ -107,41 +107,64 @@ export interface NankaiTroughInfo {
   bodyText: string;
 }
 
-// ---- Step 3 types (extra.xml) — to be expanded when parsers are implemented ----
+// ---- Step 3 types (extra.xml) ----
 
-/** Parsed special warning information. */
+/** Parsed special warning information from VPWW53/54 detail XML. */
 export interface SpecialWarningInfo {
   title: string;
+  /** Event timestamp in ISO 8601 UTC */
   timeUtc: string;
   reportDateTime: string;
+  /** Active special warning kind names (e.g., ["大雨特別警報", "暴風特別警報"]) */
+  warningKinds: string[];
+  /** JMA prefecture codes (2-digit) derived from area codes */
+  prefCodes: string[];
 }
 
-/** Parsed weather warning/advisory information. */
+/** Parsed weather warning/advisory information from VPWW53/54 or content. */
 export interface WeatherWarningInfo {
   title: string;
   timeUtc: string;
+  /** Raw content from feed entry (content-based) or headline (XML-based) */
   content: string;
+  /** Highest active warning level */
+  highestLevel: "special-warning" | "warning" | "advisory";
+  /** Active warning kind names (e.g., ["暴風警報", "大雨警報"]) */
+  warningKinds: string[];
+  /** JMA prefecture codes (2-digit) — from XML area codes */
+  prefCodes: string[];
+  /** Prefecture name — from content text */
+  prefName: string;
 }
 
-/** Parsed landslide warning information. */
+/** Parsed landslide warning information from feed entry content. */
 export interface LandslideWarningInfo {
   title: string;
   timeUtc: string;
+  /** Raw content from feed entry */
   content: string;
+  /** Prefecture name extracted from content */
+  prefName: string;
 }
 
-/** Parsed tornado warning information. */
+/** Parsed tornado warning information from feed entry content. */
 export interface TornadoWarningInfo {
   title: string;
   timeUtc: string;
+  /** Raw content from feed entry */
   content: string;
+  /** Prefecture name extracted from content */
+  prefName: string;
 }
 
-/** Parsed record heavy rain information. */
+/** Parsed record heavy rain information from feed entry content. */
 export interface HeavyRainInfo {
   title: string;
   timeUtc: string;
+  /** Raw content from feed entry */
   content: string;
+  /** Prefecture name extracted from content */
+  prefName: string;
 }
 
 /** Union of all disaster info types. */
