@@ -4,7 +4,17 @@ import { config } from "./config.js";
 import { fetchFeedEntries, type FeedEntry } from "./poller/jma-feed.js";
 import { fetchDetailXml } from "./poller/jma-detail.js";
 import { parseEarthquakeXml } from "./parser/earthquake.js";
-import { formatEarthquakePost } from "./poster/formatter.js";
+import { parseTsunamiXml } from "./parser/tsunami.js";
+import { parseEruptionXml } from "./parser/eruption.js";
+import { parseAshfallContent } from "./parser/ashfall.js";
+import { parseNankaiTroughXml } from "./parser/nankai-trough.js";
+import {
+  formatEarthquakePost,
+  formatTsunamiPost,
+  formatEruptionPost,
+  formatAshfallPost,
+  formatNankaiTroughPost,
+} from "./poster/formatter.js";
 import { getAgent, postToBluesky } from "./poster/bluesky.js";
 import { DedupStore } from "./storage/dedup.js";
 import { logger } from "./utils/logger.js";
@@ -23,8 +33,15 @@ async function processEntry(entry: FeedEntry) {
   switch (entry.disasterType) {
     case "earthquake":
       return processEarthquake(entry);
+    case "tsunami":
+      return processDetailXml(entry, parseTsunamiXml, formatTsunamiPost);
+    case "eruption":
+      return processDetailXml(entry, parseEruptionXml, formatEruptionPost);
+    case "ashfall":
+      return processAshfall(entry);
+    case "nankai-trough":
+      return processDetailXml(entry, parseNankaiTroughXml, formatNankaiTroughPost);
 
-    // Step 2: tsunami, eruption, ashfall, nankai-trough
     // Step 3: special-warning, weather-warning, landslide-warning, tornado-warning, heavy-rain
 
     default:
@@ -40,19 +57,83 @@ async function processEntry(entry: FeedEntry) {
 async function processEarthquake(entry: FeedEntry) {
   const xml = await fetchDetailXml(entry.linkHref);
   if (!xml) {
-    logger.warn("DETAIL", `Detail XML unavailable for ${entry.id}`);
+    logger.warn("DETAIL", `Detail XML unavailable for ${entry.id}`, {
+      url: entry.linkHref,
+      disasterType: entry.disasterType,
+    });
     return null;
   }
 
   const info = parseEarthquakeXml(xml);
   if (!info) {
-    logger.warn("PARSE", `Parse failed for ${entry.id}`);
+    logger.warn("PARSE", `Parse returned null for ${entry.id}`, {
+      url: entry.linkHref,
+    });
     return null;
   }
 
   const post = formatEarthquakePost(info);
   if (!post) {
-    logger.warn("FORMAT", `No target region for ${entry.id}`);
+    logger.warn("FORMAT", `No target region for ${entry.id}`, {
+      disasterType: entry.disasterType,
+    });
+    return null;
+  }
+
+  return post;
+}
+
+/** Generic processor for disaster types that need detail XML → parse → format. */
+async function processDetailXml<T>(
+  entry: FeedEntry,
+  parseFn: (xml: string) => T | null,
+  formatFn: (info: T) => import("./poster/bluesky.js").BsafPost | null,
+) {
+  const xml = await fetchDetailXml(entry.linkHref);
+  if (!xml) {
+    logger.warn("DETAIL", `Detail XML unavailable for ${entry.id}`, {
+      url: entry.linkHref,
+      disasterType: entry.disasterType,
+    });
+    return null;
+  }
+
+  const info = parseFn(xml);
+  if (!info) {
+    logger.warn("PARSE", `Parse returned null for ${entry.id}`, {
+      url: entry.linkHref,
+      disasterType: entry.disasterType,
+    });
+    return null;
+  }
+
+  const post = formatFn(info);
+  if (!post) {
+    logger.warn("FORMAT", `No target region for ${entry.id}`, {
+      disasterType: entry.disasterType,
+    });
+    return null;
+  }
+
+  return post;
+}
+
+/** Process ashfall entry: parse from entry content (no detail XML needed). */
+async function processAshfall(entry: FeedEntry) {
+  const info = parseAshfallContent(entry.content, entry.title, entry.updated);
+  if (!info) {
+    logger.warn("PARSE", `Parse returned null for ashfall ${entry.id}`, {
+      title: entry.title,
+      disasterType: entry.disasterType,
+    });
+    return null;
+  }
+
+  const post = formatAshfallPost(info);
+  if (!post) {
+    logger.warn("FORMAT", `No target region for ashfall ${entry.id}`, {
+      disasterType: entry.disasterType,
+    });
     return null;
   }
 
@@ -92,18 +173,16 @@ async function poll(): Promise<void> {
         lastPostTime = Date.now();
         dedup.add(entry.id);
       } catch (err) {
-        logger.error(
-          "POST",
-          `Failed to post ${entry.id}: ${err instanceof Error ? err.message : String(err)}`
-        );
+        logger.error("POST", `Failed to post ${entry.id}`, {
+          error: err,
+          entryId: entry.id,
+          disasterType: entry.disasterType,
+        });
         // Don't mark as posted — will retry next cycle
       }
     }
   } catch (err) {
-    logger.error(
-      "POLL",
-      `Poll cycle failed: ${err instanceof Error ? err.message : String(err)}`
-    );
+    logger.error("POLL", "Poll cycle failed", { error: err });
   }
 }
 
@@ -141,6 +220,6 @@ process.on("SIGTERM", () => {
 });
 
 main().catch((err) => {
-  logger.error("MAIN", `Fatal: ${err instanceof Error ? err.message : String(err)}`);
+  logger.error("MAIN", "Fatal startup error", { error: err });
   process.exit(1);
 });

@@ -40,10 +40,9 @@ export function parseEarthquakeXml(xml: string): EarthquakeInfo | null {
     const magNode = earthquake["jmx_eb:Magnitude"];
     const magnitude = Number(extractText(magNode)) || 0;
 
-    // Max intensity
+    // Max intensity (raw JMA value: "1","2","3","4","5-","5+","6-","6+","7")
     const intensity = body.Intensity?.Observation;
-    const maxIntRaw = String(intensity?.MaxInt ?? "");
-    const maxIntensity = normalizeIntensity(maxIntRaw);
+    const maxIntensity = String(intensity?.MaxInt ?? "");
 
     // Prefecture codes
     const prefCodes = extractPrefCodes(intensity);
@@ -72,10 +71,7 @@ export function parseEarthquakeXml(xml: string): EarthquakeInfo | null {
     );
     return info;
   } catch (err) {
-    logger.error(
-      "PARSE",
-      `Failed to parse earthquake XML: ${err instanceof Error ? err.message : String(err)}`
-    );
+    logger.error("PARSE", "Failed to parse earthquake XML", { error: err, input: xml });
     return null;
   }
 }
@@ -105,26 +101,6 @@ function toUtcIso(jstIso: string): string {
   const d = new Date(jstIso);
   if (isNaN(d.getTime())) return "";
   return d.toISOString().replace(/\.\d{3}Z$/, "Z");
-}
-
-/**
- * Normalize JMA intensity value.
- * MaxInt from XML is like "1","2","3","4","5-","5+","6-","6+","7"
- * We convert to: "震度1","震度2",..."震度5弱","震度5強",..."震度7"
- */
-function normalizeIntensity(raw: string): string {
-  const map: Record<string, string> = {
-    "1": "震度1",
-    "2": "震度2",
-    "3": "震度3",
-    "4": "震度4",
-    "5-": "震度5弱",
-    "5+": "震度5強",
-    "6-": "震度6弱",
-    "6+": "震度6強",
-    "7": "震度7",
-  };
-  return map[raw] ?? `震度${raw}`;
 }
 
 /** Extract all prefecture codes from the Intensity/Observation node. */

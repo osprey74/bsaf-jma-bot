@@ -25,7 +25,7 @@ export interface EarthquakeInfo {
   magnitude: number;
   /** Depth in km (e.g., 60) */
   depthKm: number;
-  /** Maximum seismic intensity (JMA scale, e.g., "5強") */
+  /** Maximum seismic intensity — raw JMA value (e.g., "5+", "6-", "7") */
   maxIntensity: string;
   /** JMA prefecture codes where shaking was observed */
   prefCodes: string[];
@@ -35,37 +35,76 @@ export interface EarthquakeInfo {
   reportDateTime: string;
 }
 
-// ---- Step 2 types (eqvol.xml) — to be expanded when parsers are implemented ----
+// ---- Step 2 types (eqvol.xml) ----
 
-/** Parsed tsunami warning/advisory information. */
+/** Per-area detail within a tsunami forecast. */
+export interface TsunamiAreaDetail {
+  /** Forecast area name (e.g., "岩手県", "千葉県九十九里・外房") */
+  name: string;
+  /** Forecast area code */
+  code: string;
+  /** Warning kind name (e.g., "大津波警報", "津波警報", "津波注意報") */
+  kindName: string;
+  /** Warning kind code (e.g., "52", "51", "62") */
+  kindCode: string;
+  /** Expected height description (e.g., "３ｍ", "巨大") or empty */
+  expectedHeight: string;
+  /** First arrival time (ISO 8601) or empty */
+  arrivalTime: string;
+}
+
+/** Parsed tsunami warning/advisory information from VTSE41/51. */
 export interface TsunamiInfo {
   eventId: string;
   title: string;
+  /** Event timestamp in ISO 8601 UTC */
   timeUtc: string;
   reportDateTime: string;
+  /** Per-area forecast details (only active warnings, excludes 解除/津波なし) */
+  areas: TsunamiAreaDetail[];
 }
 
-/** Parsed eruption/volcanic alert information. */
+/** Parsed eruption/volcanic alert information from VFVO50/52/56. */
 export interface EruptionInfo {
   eventId: string;
   title: string;
   timeUtc: string;
   reportDateTime: string;
+  /** Volcano name (e.g., "桜島") */
+  volcanoName: string;
+  /** JMA volcano code */
+  volcanoCode: string;
+  /** Volcanic alert level (1-5), 0 if not available */
+  alertLevel: number;
+  /** Warning kind name (e.g., "噴火警報（火口周辺）") */
+  warningKind: string;
+  /** Municipality codes (6-digit) for target region mapping */
+  municipalityCodes: string[];
 }
 
-/** Parsed ashfall forecast information. */
+/** Parsed ashfall forecast information from feed entry content. */
 export interface AshfallInfo {
   title: string;
+  /** Entry updated timestamp in ISO 8601 UTC */
   timeUtc: string;
+  /** Raw content from feed entry */
   content: string;
+  /** Extracted volcano name (e.g., "桜島") */
+  volcanoName: string;
+  /** Forecast type: "定時" | "速報" | "詳細" */
+  forecastType: string;
 }
 
-/** Parsed Nankai Trough temporary information. */
+/** Parsed Nankai Trough temporary information from VYSE50/51. */
 export interface NankaiTroughInfo {
   eventId: string;
   title: string;
   timeUtc: string;
   reportDateTime: string;
+  /** Keyword: "巨大地震警戒" | "巨大地震注意" | "調査中" or raw headline */
+  keyword: string;
+  /** Main body text */
+  bodyText: string;
 }
 
 // ---- Step 3 types (extra.xml) — to be expanded when parsers are implemented ----

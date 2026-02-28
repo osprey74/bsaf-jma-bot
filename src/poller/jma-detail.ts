@@ -10,15 +10,12 @@ export async function fetchDetailXml(
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
     if (!res.ok) {
-      logger.warn("DETAIL", `Fetch failed ${res.status}: ${url}`);
+      logger.warn("DETAIL", `Fetch failed for ${url}`, { statusCode: res.status });
       return null;
     }
     return await res.text();
   } catch (err) {
-    logger.warn(
-      "DETAIL",
-      `Fetch error: ${err instanceof Error ? err.message : String(err)}`
-    );
+    logger.warn("DETAIL", `Fetch error for ${url}`, { error: err });
     return null;
   }
 }

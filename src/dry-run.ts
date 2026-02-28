@@ -5,8 +5,19 @@
 import { fetchFeedEntries } from "./poller/jma-feed.js";
 import { fetchDetailXml } from "./poller/jma-detail.js";
 import { parseEarthquakeXml } from "./parser/earthquake.js";
-import { formatEarthquakePost } from "./poster/formatter.js";
+import { parseTsunamiXml } from "./parser/tsunami.js";
+import { parseEruptionXml } from "./parser/eruption.js";
+import { parseAshfallContent } from "./parser/ashfall.js";
+import { parseNankaiTroughXml } from "./parser/nankai-trough.js";
+import {
+  formatEarthquakePost,
+  formatTsunamiPost,
+  formatEruptionPost,
+  formatAshfallPost,
+  formatNankaiTroughPost,
+} from "./poster/formatter.js";
 import { config } from "./config.js";
+import type { BsafPost } from "./poster/bluesky.js";
 
 async function dryRun() {
   console.log("=== bsaf-jma-bot dry run ===\n");
@@ -23,31 +34,57 @@ async function dryRun() {
     console.log(`  ID: ${entry.id}`);
     console.log(`  Link: ${entry.linkHref}`);
 
-    if (entry.disasterType !== "earthquake") {
-      console.log(`  ⏭ Parser not yet implemented for "${entry.disasterType}"\n`);
-      continue;
+    let post: BsafPost | null = null;
+
+    switch (entry.disasterType) {
+      case "earthquake": {
+        const xml = await fetchDetailXml(entry.linkHref);
+        if (!xml) { console.log("  ⚠ Could not fetch detail XML\n"); continue; }
+        const info = parseEarthquakeXml(xml);
+        if (!info) { console.log("  ⚠ Parse failed\n"); continue; }
+        console.log(`  M${info.magnitude} MaxInt:${info.maxIntensity} ${info.hypocenterName}`);
+        post = formatEarthquakePost(info);
+        break;
+      }
+      case "tsunami": {
+        const xml = await fetchDetailXml(entry.linkHref);
+        if (!xml) { console.log("  ⚠ Could not fetch detail XML\n"); continue; }
+        const info = parseTsunamiXml(xml);
+        if (!info) { console.log("  ⚠ Parse failed\n"); continue; }
+        console.log(`  Areas: ${info.areas.map(a => `${a.kindName}:${a.name}`).join(", ")}`);
+        post = formatTsunamiPost(info);
+        break;
+      }
+      case "eruption": {
+        const xml = await fetchDetailXml(entry.linkHref);
+        if (!xml) { console.log("  ⚠ Could not fetch detail XML\n"); continue; }
+        const info = parseEruptionXml(xml);
+        if (!info) { console.log("  ⚠ Parse failed\n"); continue; }
+        console.log(`  ${info.volcanoName} Level:${info.alertLevel} ${info.warningKind}`);
+        post = formatEruptionPost(info);
+        break;
+      }
+      case "ashfall": {
+        const info = parseAshfallContent(entry.content, entry.title, entry.updated);
+        if (!info) { console.log("  ⚠ Parse failed\n"); continue; }
+        console.log(`  ${info.volcanoName} (${info.forecastType})`);
+        post = formatAshfallPost(info);
+        break;
+      }
+      case "nankai-trough": {
+        const xml = await fetchDetailXml(entry.linkHref);
+        if (!xml) { console.log("  ⚠ Could not fetch detail XML\n"); continue; }
+        const info = parseNankaiTroughXml(xml);
+        if (!info) { console.log("  ⚠ Parse failed\n"); continue; }
+        console.log(`  Keyword: ${info.keyword}`);
+        post = formatNankaiTroughPost(info);
+        break;
+      }
+      default:
+        console.log(`  ⏭ Parser not yet implemented for "${entry.disasterType}"\n`);
+        continue;
     }
 
-    const xml = await fetchDetailXml(entry.linkHref);
-    if (!xml) {
-      console.log("  ⚠ Could not fetch detail XML\n");
-      continue;
-    }
-
-    const info = parseEarthquakeXml(xml);
-    if (!info) {
-      console.log("  ⚠ Could not parse earthquake info\n");
-      continue;
-    }
-
-    console.log(`  EventID: ${info.eventId}`);
-    console.log(`  Origin: ${info.originTimeUtc}`);
-    console.log(`  Location: ${info.hypocenterName}`);
-    console.log(`  M${info.magnitude} Depth:${info.depthKm}km MaxInt:${info.maxIntensity}`);
-    console.log(`  PrefCodes: ${info.prefCodes.join(", ")}`);
-    console.log(`  Tsunami: ${info.tsunamiComment}`);
-
-    const post = formatEarthquakePost(info);
     if (!post) {
       console.log("  ⚠ Could not format post\n");
       continue;

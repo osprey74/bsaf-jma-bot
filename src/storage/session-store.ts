@@ -18,8 +18,8 @@ export function loadSession(filePath: string): StoredSession | null {
       return data as StoredSession;
     }
     return null;
-  } catch {
-    logger.warn("SESSION", "Failed to load session file");
+  } catch (err) {
+    logger.warn("SESSION", "Failed to load session file", { error: err, filePath });
     return null;
   }
 }

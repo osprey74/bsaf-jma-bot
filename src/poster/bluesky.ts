@@ -28,8 +28,8 @@ export async function getAgent(): Promise<BskyAgent> {
       logger.info("BLUESKY", `Resumed session as ${saved.handle}`);
       persistSession(agent);
       return agent;
-    } catch {
-      logger.warn("BLUESKY", "Failed to resume session, logging in fresh");
+    } catch (err) {
+      logger.warn("BLUESKY", "Failed to resume session, logging in fresh", { error: err });
     }
   }
 

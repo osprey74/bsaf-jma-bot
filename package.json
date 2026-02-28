@@ -1,7 +1,7 @@
 {
   "name": "bsaf-jma-bot",
   "version": "0.1.0",
-  "description": "BSAF reference bot for Japan earthquake alerts from JMA",
+  "description": "BSAF-compliant disaster information bot for JMA feeds on Bluesky",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
@@ -18,6 +18,8 @@
     "bluesky",
     "jma",
     "earthquake",
+    "tsunami",
+    "disaster",
     "bot"
   ],
   "author": "osprey74",

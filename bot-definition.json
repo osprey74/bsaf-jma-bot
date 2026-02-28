@@ -1,52 +1,54 @@
 {
   "bsaf_schema": "1.0",
-  "updated_at": "2026-02-25T00:00:00Z",
+  "updated_at": "2026-02-28T00:00:00Z",
   "self_url": "https://raw.githubusercontent.com/osprey74/bsaf-jma-bot/main/bot-definition.json",
+
   "bot": {
     "handle": "jma-alert-bot.bsky.social",
     "did": "",
-    "name": "Japan Earthquake Alerts (Unofficial)",
-    "description": "Earthquake alerts based on JMA (Japan Meteorological Agency) public data",
-    "source": "Japan Meteorological Agency — Disaster Prevention XML",
+    "name": "防災情報Bot（非公式）",
+    "description": "気象庁の公開データに基づく防災情報",
+    "source": "気象庁 防災情報XML",
     "source_url": "https://www.data.jma.go.jp/developer/xml/feed/"
   },
+
   "filters": [
     {
       "tag": "type",
-      "label": "Alert Type",
+      "label": "情報種別",
       "options": [
-        { "value": "earthquake", "label": "Earthquake" }
+        { "value": "earthquake", "label": "地震" }
       ]
     },
     {
       "tag": "value",
-      "label": "Seismic Intensity",
+      "label": "重み付け",
       "options": [
-        { "value": "震度1", "label": "Seismic 1" },
-        { "value": "震度2", "label": "Seismic 2" },
-        { "value": "震度3", "label": "Seismic 3" },
-        { "value": "震度4", "label": "Seismic 4" },
-        { "value": "震度5弱", "label": "Seismic 5 Lower" },
-        { "value": "震度5強", "label": "Seismic 5 Upper" },
-        { "value": "震度6弱", "label": "Seismic 6 Lower" },
-        { "value": "震度6強", "label": "Seismic 6 Upper" },
-        { "value": "震度7", "label": "Seismic 7" }
+        { "value": "1", "label": "震度1" },
+        { "value": "2", "label": "震度2" },
+        { "value": "3", "label": "震度3" },
+        { "value": "4", "label": "震度4" },
+        { "value": "5-", "label": "震度5弱" },
+        { "value": "5+", "label": "震度5強" },
+        { "value": "6-", "label": "震度6弱" },
+        { "value": "6+", "label": "震度6強" },
+        { "value": "7", "label": "震度7" }
       ]
     },
     {
       "tag": "target",
-      "label": "Region",
+      "label": "地域",
       "options": [
-        { "value": "jp-hokkaido", "label": "Hokkaido" },
-        { "value": "jp-tohoku", "label": "Tohoku" },
-        { "value": "jp-kanto", "label": "Kanto" },
-        { "value": "jp-hokuriku", "label": "Hokuriku" },
-        { "value": "jp-chubu", "label": "Chubu" },
-        { "value": "jp-kinki", "label": "Kinki" },
-        { "value": "jp-chugoku", "label": "Chugoku" },
-        { "value": "jp-shikoku", "label": "Shikoku" },
-        { "value": "jp-kyushu", "label": "Kyushu" },
-        { "value": "jp-okinawa", "label": "Okinawa" }
+        { "value": "jp-hokkaido", "label": "北海道" },
+        { "value": "jp-tohoku", "label": "東北" },
+        { "value": "jp-kanto", "label": "関東" },
+        { "value": "jp-hokuriku", "label": "北陸" },
+        { "value": "jp-chubu", "label": "中部" },
+        { "value": "jp-kinki", "label": "近畿" },
+        { "value": "jp-chugoku", "label": "中国" },
+        { "value": "jp-shikoku", "label": "四国" },
+        { "value": "jp-kyushu", "label": "九州" },
+        { "value": "jp-okinawa", "label": "沖縄" }
       ]
     }
   ]

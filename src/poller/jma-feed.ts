@@ -108,12 +108,22 @@ export async function fetchFeedEntries(
     if (!match) continue;
 
     const link = entry.link as Record<string, string> | undefined;
+
+    // content may be a plain string or an object { @_type, #text } from fast-xml-parser
+    const rawContent = entry.content;
+    const contentText =
+      typeof rawContent === "string"
+        ? rawContent
+        : typeof rawContent === "object" && rawContent !== null
+          ? String((rawContent as Record<string, unknown>)["#text"] ?? "")
+          : "";
+
     result.push({
       id: String(entry.id ?? ""),
       title,
       updated: String(entry.updated ?? ""),
       linkHref: link?.["@_href"] ?? "",
-      content: String(entry.content?.toString() ?? ""),
+      content: contentText,
       disasterType: match.type,
       needsDetailXml: match.needsDetailXml,
     });
