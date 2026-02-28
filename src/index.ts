@@ -26,6 +26,7 @@ import {
   formatHeavyRainPost,
 } from "./poster/formatter.js";
 import { getAgent, postToBluesky } from "./poster/bluesky.js";
+import { determinePriority } from "./poster/priority.js";
 import { DedupStore } from "./storage/dedup.js";
 import { logger } from "./utils/logger.js";
 
@@ -176,8 +177,10 @@ async function poll(): Promise<void> {
     ]);
     const entries = [...eqvolEntries, ...extraEntries];
 
+    // Phase 1: Process all new entries and collect posts with priorities
+    const pending: { entryId: string; post: import("./poster/bluesky.js").BsafPost; priority: number; disasterType: string }[] = [];
+
     for (const entry of entries) {
-      // Skip already-processed entries
       if (dedup.has(entry.id)) continue;
 
       const post = await processEntry(entry);
@@ -186,24 +189,37 @@ async function poll(): Promise<void> {
         continue;
       }
 
-      // Enforce minimum posting interval
-      const now = Date.now();
-      const elapsed = now - lastPostTime;
-      if (elapsed < config.posting.minIntervalMs) {
-        const wait = config.posting.minIntervalMs - elapsed;
-        await sleep(wait);
+      const priority = determinePriority(post.tags);
+      pending.push({ entryId: entry.id, post, priority, disasterType: entry.disasterType });
+    }
+
+    if (pending.length === 0) return;
+
+    // Phase 2: Sort by priority (P0 first, then P1, ..., P4)
+    pending.sort((a, b) => a.priority - b.priority);
+
+    logger.info("QUEUE", `${pending.length} posts queued: ${pending.map((p) => `P${p.priority}:${p.disasterType}`).join(", ")}`);
+
+    // Phase 3: Post in priority order
+    for (const item of pending) {
+      // P0 bypasses minInterval (life-threatening: 大津波警報, 南海トラフ)
+      if (item.priority > 0) {
+        const elapsed = Date.now() - lastPostTime;
+        if (elapsed < config.posting.minIntervalMs) {
+          await sleep(config.posting.minIntervalMs - elapsed);
+        }
       }
 
-      // Post to Bluesky
       try {
-        await postToBluesky(post);
+        await postToBluesky(item.post);
         lastPostTime = Date.now();
-        dedup.add(entry.id);
+        dedup.add(item.entryId);
       } catch (err) {
-        logger.error("POST", `Failed to post ${entry.id}`, {
+        logger.error("POST", `Failed to post ${item.entryId}`, {
           error: err,
-          entryId: entry.id,
-          disasterType: entry.disasterType,
+          entryId: item.entryId,
+          disasterType: item.disasterType,
+          priority: item.priority,
         });
         // Don't mark as posted — will retry next cycle
       }
