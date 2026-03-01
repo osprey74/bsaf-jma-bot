@@ -229,11 +229,75 @@ async function poll(): Promise<void> {
   }
 }
 
+/**
+ * Startup catchup: fetch long-term feeds (eqvol_l.xml, extra_l.xml) once
+ * to recover entries missed during downtime (spec §3.1).
+ */
+async function catchup(): Promise<void> {
+  logger.info("CATCHUP", "Fetching long-term feeds for startup catchup...");
+  try {
+    const [eqvolEntries, extraEntries] = await Promise.all([
+      fetchFeedEntries(config.jma.eqvolLongFeedUrl, "eqvol"),
+      fetchFeedEntries(config.jma.extraLongFeedUrl, "extra"),
+    ]);
+    const entries = [...eqvolEntries, ...extraEntries];
+
+    const pending: { entryId: string; post: import("./poster/bluesky.js").BsafPost; priority: number; disasterType: string }[] = [];
+
+    for (const entry of entries) {
+      if (dedup.has(entry.id)) continue;
+
+      const post = await processEntry(entry);
+      if (!post) {
+        dedup.add(entry.id);
+        continue;
+      }
+
+      const priority = determinePriority(post.tags);
+      pending.push({ entryId: entry.id, post, priority, disasterType: entry.disasterType });
+    }
+
+    if (pending.length === 0) {
+      logger.info("CATCHUP", "No missed entries to catch up");
+      return;
+    }
+
+    pending.sort((a, b) => a.priority - b.priority);
+    logger.info("CATCHUP", `${pending.length} missed entries found: ${pending.map((p) => `P${p.priority}:${p.disasterType}`).join(", ")}`);
+
+    for (const item of pending) {
+      if (item.priority > 0) {
+        const elapsed = Date.now() - lastPostTime;
+        if (elapsed < config.posting.minIntervalMs) {
+          await sleep(config.posting.minIntervalMs - elapsed);
+        }
+      }
+
+      try {
+        await postToBluesky(item.post);
+        lastPostTime = Date.now();
+        dedup.add(item.entryId);
+      } catch (err) {
+        logger.error("CATCHUP", `Failed to post ${item.entryId}`, {
+          error: err,
+          entryId: item.entryId,
+          disasterType: item.disasterType,
+          priority: item.priority,
+        });
+      }
+    }
+
+    logger.info("CATCHUP", "Startup catchup complete");
+  } catch (err) {
+    logger.error("CATCHUP", "Catchup failed, continuing with normal polling", { error: err });
+  }
+}
+
 async function main(): Promise<void> {
   logger.info("MAIN", "bsaf-jma-bot starting...");
   logger.info("MAIN", `Poll interval: ${config.jma.pollIntervalMs}ms`);
   logger.info("MAIN", `Data dir: ${config.dataDir}`);
-  logger.info("MAIN", "Feeds: eqvol.xml, extra.xml");
+  logger.info("MAIN", "Feeds: eqvol.xml, extra.xml (+long-term catchup)");
 
   // Validate credentials by connecting early (with retry for transient errors)
   const MAX_RETRIES = 5;
@@ -249,7 +313,10 @@ async function main(): Promise<void> {
     }
   }
 
-  // Initial poll
+  // Startup catchup from long-term feeds (recover from downtime)
+  await catchup();
+
+  // Initial poll from short-term feeds
   await poll();
 
   // Start polling loop

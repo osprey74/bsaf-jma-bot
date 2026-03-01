@@ -46,7 +46,7 @@
 ### 今後の作業
 
 - [x] Fly.ioへのデプロイ — `fly deploy` + `fly secrets set` で本番稼働開始
-- [ ] 起動時キャッチアップの実装 — `eqvol_l.xml` / `extra_l.xml` 長期フィードの対応（仕様書 §3.1）
+- [x] 起動時キャッチアップの実装 — `eqvol_l.xml` / `extra_l.xml` 長期フィードの対応（仕様書 §3.1）
 - [x] BSAF紹介投稿 — Botアカウントの固定投稿としてBSAFの概要・フィルタリング機能・開発者向け情報を投稿
 - [ ] bsaf-protocol ロードマップ更新 — Phase 1 のリファレンスBot公開・Bot定義JSON公開を完了マーク
 

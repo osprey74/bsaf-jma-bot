@@ -11,6 +11,10 @@ export const config = {
       "https://www.data.jma.go.jp/developer/xml/feed/eqvol.xml",
     extraFeedUrl:
       "https://www.data.jma.go.jp/developer/xml/feed/extra.xml",
+    eqvolLongFeedUrl:
+      "https://www.data.jma.go.jp/developer/xml/feed/eqvol_l.xml",
+    extraLongFeedUrl:
+      "https://www.data.jma.go.jp/developer/xml/feed/extra_l.xml",
     pollIntervalMs: Number(process.env.POLL_INTERVAL_MS) || 45_000,
   },
   dataDir: process.env.DATA_DIR || "./data",
