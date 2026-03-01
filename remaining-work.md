@@ -32,6 +32,24 @@
 - [x] `bot-definition.json` の更新 — 全10災害種別の `type` フィルタ、震度+警報レベル混合の `value` フィルタを追加
 - [x] ドキュメント更新 — 仕様書のモジュール構成（§8.2）・アーキテクチャ図（§8.1）・優先度実装ノート（§7.4）を更新
 
+### リリース準備
+
+- [x] ドライラン検証 — ライブJMAフィードで全10災害種別の動作を確認（204エントリ、102件正常フォーマット）
+- [x] `README.md`（英語）/ `README-ja.md`（日本語）の作成
+- [x] Blueskyアカウント作成 — `jma-alert-bot.bsky.social`
+- [x] `bot-definition.json` に DID を設定 — `did:plc:vwi7zhfyamyvrg5v6ycjgzxi`
+- [x] リポジトリ公開 — `bsaf-protocol` / `bsaf-jma-bot` ともにPUBLIC
+- [x] `bot-definition.json` の外部アクセス確認（HTTP 200）
+- [x] Bluesky接続テスト — ログイン成功
+- [x] ローカル本番モード実行テスト — 投稿・パース・優先度ソート正常動作確認
+
+### 今後の作業
+
+- [x] Fly.ioへのデプロイ — `fly deploy` + `fly secrets set` で本番稼働開始
+- [ ] 起動時キャッチアップの実装 — `eqvol_l.xml` / `extra_l.xml` 長期フィードの対応（仕様書 §3.1）
+- [x] BSAF紹介投稿 — Botアカウントの固定投稿としてBSAFの概要・フィルタリング機能・開発者向け情報を投稿
+- [ ] bsaf-protocol ロードマップ更新 — Phase 1 のリファレンスBot公開・Bot定義JSON公開を完了マーク
+
 ### 注意事項（実装時の参照用）
 
 - **2026年電文改正**: 集約通報・気象防災速報が新設予定。タイトルは正規表現マッチング推奨

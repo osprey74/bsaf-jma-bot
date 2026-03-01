@@ -1,14 +1,24 @@
-app = "bsaf-jma-bot"
-primary_region = "nrt"
+# fly.toml app configuration file generated for bsaf-jma-bot on 2026-03-01T14:48:16+09:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'bsaf-jma-bot'
+primary_region = 'nrt'
 
 [build]
 
-[mounts]
-  source = "bsaf_data"
-  destination = "/data"
-
 [env]
-  NODE_ENV = "production"
-  DATA_DIR = "/data"
-  POLL_INTERVAL_MS = "45000"
-  LOG_LEVEL = "INFO"
+  DATA_DIR = '/data'
+  LOG_LEVEL = 'INFO'
+  NODE_ENV = 'production'
+  POLL_INTERVAL_MS = '45000'
+
+[[mounts]]
+  source = 'bsaf_data'
+  destination = '/data'
+
+[[vm]]
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 256

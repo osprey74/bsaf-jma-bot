@@ -235,8 +235,19 @@ async function main(): Promise<void> {
   logger.info("MAIN", `Data dir: ${config.dataDir}`);
   logger.info("MAIN", "Feeds: eqvol.xml, extra.xml");
 
-  // Validate credentials by connecting early
-  await getAgent();
+  // Validate credentials by connecting early (with retry for transient errors)
+  const MAX_RETRIES = 5;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      await getAgent();
+      break;
+    } catch (err) {
+      if (attempt === MAX_RETRIES) throw err;
+      const delay = Math.min(30_000, 5_000 * 2 ** (attempt - 1)); // 5s, 10s, 20s, 30s
+      logger.warn("MAIN", `Login attempt ${attempt}/${MAX_RETRIES} failed, retrying in ${delay / 1000}s`, { error: err });
+      await sleep(delay);
+    }
+  }
 
   // Initial poll
   await poll();
