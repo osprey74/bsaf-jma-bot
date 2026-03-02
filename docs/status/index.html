@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bsaf-jma-bot ステータス</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    header { margin-bottom: 24px; }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+    }
+
+    /* Status banner */
+    .status-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-radius: 8px;
+      background: #1e293b;
+      margin-bottom: 24px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-ok { background: #22c55e; box-shadow: 0 0 8px #22c55e80; }
+    .dot-error { background: #ef4444; box-shadow: 0 0 8px #ef444480; animation: pulse 2s infinite; }
+    .dot-unknown { background: #64748b; }
+    .dot-loading { background: #f59e0b; animation: pulse 1.5s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-text {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .status-sub {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-left: auto;
+    }
+
+    /* Metrics grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .metric-card {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 16px;
+      border: 1px solid #334155;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .metric-sub {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 24px;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #1e293b;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 16px;
+      font-size: 0.75rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #334155;
+    }
+
+    td {
+      padding: 8px 16px;
+      font-size: 0.875rem;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    tr:nth-child(even) td { background: #0f172a20; }
+
+    .empty {
+      text-align: center;
+      color: #64748b;
+      padding: 16px;
+    }
+
+    /* Events list */
+    .event-item {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-left: 3px solid #334155;
+      background: #1e293b;
+      margin-bottom: 2px;
+      font-size: 0.875rem;
+    }
+
+    .event-item:first-child { border-radius: 8px 8px 0 0; }
+    .event-item:last-child { border-radius: 0 0 8px 8px; }
+    .event-item:only-child { border-radius: 8px; }
+
+    .event-posted { border-left-color: #22c55e; }
+    .event-skipped { border-left-color: #f59e0b; }
+    .event-error { border-left-color: #ef4444; }
+
+    .event-time {
+      color: #94a3b8;
+      font-size: 0.75rem;
+      font-variant-numeric: tabular-nums;
+      min-width: 100px;
+    }
+
+    .event-type {
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .event-result {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .result-posted { background: #22c55e20; color: #22c55e; }
+    .result-skipped { background: #f59e0b20; color: #f59e0b; }
+    .result-error { background: #ef444420; color: #ef4444; }
+
+    .event-error-msg {
+      width: 100%;
+      font-size: 0.75rem;
+      color: #ef4444;
+      padding-left: 108px;
+    }
+
+    .event-id {
+      color: #64748b;
+      font-size: 0.7rem;
+      margin-left: auto;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 32px;
+      padding-top: 16px;
+      border-top: 1px solid #1e293b;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    footer a {
+      color: #60a5fa;
+      text-decoration: none;
+    }
+
+    footer a:hover { text-decoration: underline; }
+
+    /* Connection error overlay */
+    .conn-error {
+      background: #7f1d1d40;
+      border: 1px solid #ef4444;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      font-size: 0.875rem;
+      color: #fca5a5;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>bsaf-jma-bot ステータス</h1>
+      <p class="subtitle">気象庁防災情報 Bluesky Bot 稼働状況</p>
+    </header>
+
+    <div id="conn-error" class="conn-error"></div>
+
+    <section class="status-banner">
+      <span id="status-dot" class="dot dot-loading"></span>
+      <span id="status-text" class="status-text">読み込み中...</span>
+      <span id="status-sub" class="status-sub"></span>
+    </section>
+
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">稼働時間</div>
+        <div id="uptime" class="metric-value">--</div>
+        <div id="started-at" class="metric-sub"></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">最終ポーリング</div>
+        <div id="last-poll" class="metric-value">--</div>
+        <div id="poll-count" class="metric-sub"></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">最終投稿</div>
+        <div id="last-post" class="metric-value">--</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">投稿数</div>
+        <div id="post-count" class="metric-value">--</div>
+        <div id="error-count" class="metric-sub"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>災害種別ごとの投稿数</h2>
+      <table>
+        <thead>
+          <tr><th>種別</th><th>投稿数</th></tr>
+        </thead>
+        <tbody id="type-tbody"></tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2>直近のイベント</h2>
+      <div id="events-list"></div>
+    </section>
+
+    <footer>
+      <p>
+        自動更新: 45秒間隔 |
+        <a href="https://bsky.app/profile/jma-alert-bot.bsky.social" target="_blank" rel="noopener">
+          @jma-alert-bot.bsky.social
+        </a> |
+        <a href="https://github.com/osprey74/bsaf-jma-bot" target="_blank" rel="noopener">
+          GitHub
+        </a>
+      </p>
+    </footer>
+  </div>
+
+  <script>
+    const STATUS_URL = 'https://bsaf-jma-bot.fly.dev/status';
+    const REFRESH_MS = 45000;
+
+    const TYPE_LABELS = {
+      'earthquake': '地震',
+      'tsunami': '津波',
+      'eruption': '噴火',
+      'ashfall': '降灰予報',
+      'nankai-trough': '南海トラフ臨時情報',
+      'special-warning': '特別警報',
+      'weather-warning': '気象警報',
+      'landslide-warning': '土砂災害警戒情報',
+      'tornado-warning': '竜巻注意情報',
+      'heavy-rain': '記録的短時間大雨情報',
+    };
+
+    const RESULT_LABELS = {
+      'posted': '投稿済',
+      'skipped': 'スキップ',
+      'error': 'エラー',
+    };
+
+    function formatUptime(sec) {
+      const d = Math.floor(sec / 86400);
+      const h = Math.floor((sec % 86400) / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      if (d > 0) return d + '日 ' + h + '時間 ' + m + '分';
+      if (h > 0) return h + '時間 ' + m + '分';
+      return m + '分';
+    }
+
+    function relativeTime(iso) {
+      if (!iso) return '--';
+      const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+      if (diff < 0) return '0秒前';
+      if (diff < 60) return diff + '秒前';
+      if (diff < 3600) return Math.floor(diff / 60) + '分前';
+      if (diff < 86400) return Math.floor(diff / 3600) + '時間前';
+      return Math.floor(diff / 86400) + '日前';
+    }
+
+    function toJST(iso) {
+      if (!iso) return '--';
+      return new Date(iso).toLocaleString('ja-JP', {
+        timeZone: 'Asia/Tokyo',
+        month: 'numeric', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      });
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    async function fetchStatus() {
+      const connErr = document.getElementById('conn-error');
+      try {
+        const res = await fetch(STATUS_URL);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        connErr.style.display = 'none';
+        render(data);
+      } catch (err) {
+        connErr.textContent = 'ステータスサーバーに接続できません: ' + err.message;
+        connErr.style.display = 'block';
+        document.getElementById('status-dot').className = 'dot dot-unknown';
+        document.getElementById('status-text').textContent = '接続エラー';
+      }
+    }
+
+    function render(data) {
+      // Banner
+      const dot = document.getElementById('status-dot');
+      const text = document.getElementById('status-text');
+      dot.className = 'dot ' + (data.status === 'ok' ? 'dot-ok' : 'dot-error');
+      text.textContent = data.status === 'ok' ? '正常稼働中' : 'エラー発生';
+      document.getElementById('status-sub').textContent = 'v' + data.version;
+
+      // Metrics
+      document.getElementById('uptime').textContent = formatUptime(data.uptimeSeconds);
+      document.getElementById('started-at').textContent = '起動: ' + toJST(data.startedAt);
+      document.getElementById('last-poll').textContent = relativeTime(data.poll.lastPollAt);
+      document.getElementById('poll-count').textContent =
+        'ポーリング ' + data.poll.count + '回' +
+        (data.poll.errorCount > 0 ? ' (エラー ' + data.poll.errorCount + ')' : '');
+      document.getElementById('last-post').textContent = relativeTime(data.post.lastPostAt);
+      document.getElementById('post-count').textContent = String(data.post.count);
+      document.getElementById('error-count').textContent =
+        data.post.errorCount > 0 ? 'エラー: ' + data.post.errorCount : '';
+
+      // Type table
+      const tbody = document.getElementById('type-tbody');
+      tbody.innerHTML = '';
+      const types = Object.keys(TYPE_LABELS);
+      let hasRows = false;
+      for (const type of types) {
+        const count = data.post.byType[type];
+        if (!count) continue;
+        hasRows = true;
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + TYPE_LABELS[type] + '</td><td>' + count + '</td>';
+        tbody.appendChild(tr);
+      }
+      if (!hasRows) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td colspan="2" class="empty">投稿なし</td>';
+        tbody.appendChild(tr);
+      }
+
+      // Events
+      const list = document.getElementById('events-list');
+      list.innerHTML = '';
+      if (data.recentEvents.length === 0) {
+        list.innerHTML = '<div class="empty">イベントなし</div>';
+        return;
+      }
+      for (const ev of data.recentEvents) {
+        const div = document.createElement('div');
+        div.className = 'event-item event-' + ev.result;
+        const typeLabel = TYPE_LABELS[ev.disasterType] || ev.disasterType;
+        const resultLabel = RESULT_LABELS[ev.result] || ev.result;
+        let html =
+          '<span class="event-time">' + toJST(ev.timestamp) + '</span>' +
+          '<span class="event-type">' + escapeHtml(typeLabel) + '</span>' +
+          '<span class="event-result result-' + ev.result + '">' + escapeHtml(resultLabel) + '</span>';
+        if (ev.entryId) {
+          const short = ev.entryId.length > 60
+            ? '...' + ev.entryId.slice(-57)
+            : ev.entryId;
+          html += '<span class="event-id" title="' + escapeHtml(ev.entryId) + '">' + escapeHtml(short) + '</span>';
+        }
+        if (ev.errorMessage) {
+          html += '<div class="event-error-msg">' + escapeHtml(ev.errorMessage) + '</div>';
+        }
+        div.innerHTML = html;
+        list.appendChild(div);
+      }
+    }
+
+    fetchStatus();
+    setInterval(fetchStatus, REFRESH_MS);
+  </script>
+</body>
+</html>

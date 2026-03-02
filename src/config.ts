@@ -27,4 +27,7 @@ export const config = {
   posting: {
     minIntervalMs: 10_000,
   },
-} as const;
+  status: {
+    port: Number(process.env.STATUS_PORT) || 8080,
+  },
+};

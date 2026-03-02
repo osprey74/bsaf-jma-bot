@@ -29,11 +29,16 @@ import { getAgent, postToBluesky } from "./poster/bluesky.js";
 import { determinePriority } from "./poster/priority.js";
 import { DedupStore } from "./storage/dedup.js";
 import { logger } from "./utils/logger.js";
+import { StatusStore } from "./status/store.js";
+import { startStatusServer } from "./status/server.js";
+import type http from "node:http";
 
 // Ensure data directory exists
 fs.mkdirSync(config.dataDir, { recursive: true });
 
 const dedup = new DedupStore(config.dbPath);
+const statusStore = new StatusStore("0.1.0");
+let statusServer: http.Server | null = null;
 let lastPostTime = 0;
 
 /**
@@ -176,6 +181,7 @@ async function poll(): Promise<void> {
       fetchFeedEntries(config.jma.extraFeedUrl, "extra"),
     ]);
     const entries = [...eqvolEntries, ...extraEntries];
+    statusStore.recordPoll();
 
     // Phase 1: Process all new entries and collect posts with priorities
     const pending: { entryId: string; post: import("./poster/bluesky.js").BsafPost; priority: number; disasterType: string }[] = [];
@@ -214,6 +220,7 @@ async function poll(): Promise<void> {
         await postToBluesky(item.post);
         lastPostTime = Date.now();
         dedup.add(item.entryId);
+        statusStore.recordPost(item.disasterType, item.entryId);
       } catch (err) {
         logger.error("POST", `Failed to post ${item.entryId}`, {
           error: err,
@@ -221,11 +228,17 @@ async function poll(): Promise<void> {
           disasterType: item.disasterType,
           priority: item.priority,
         });
+        statusStore.recordPostError(
+          item.disasterType,
+          item.entryId,
+          err instanceof Error ? err.message : String(err),
+        );
         // Don't mark as posted — will retry next cycle
       }
     }
   } catch (err) {
     logger.error("POLL", "Poll cycle failed", { error: err });
+    statusStore.recordPollError();
   }
 }
 
@@ -277,6 +290,7 @@ async function catchup(): Promise<void> {
         await postToBluesky(item.post);
         lastPostTime = Date.now();
         dedup.add(item.entryId);
+        statusStore.recordPost(item.disasterType, item.entryId);
       } catch (err) {
         logger.error("CATCHUP", `Failed to post ${item.entryId}`, {
           error: err,
@@ -284,6 +298,11 @@ async function catchup(): Promise<void> {
           disasterType: item.disasterType,
           priority: item.priority,
         });
+        statusStore.recordPostError(
+          item.disasterType,
+          item.entryId,
+          err instanceof Error ? err.message : String(err),
+        );
       }
     }
 
@@ -321,6 +340,9 @@ async function main(): Promise<void> {
     }
   }
 
+  // Start status/health HTTP server
+  statusServer = startStatusServer(statusStore, config.status.port);
+
   // Startup catchup from long-term feeds (recover from downtime)
   await catchup();
 
@@ -339,11 +361,13 @@ function sleep(ms: number): Promise<void> {
 // Graceful shutdown
 process.on("SIGINT", () => {
   logger.info("MAIN", "Shutting down...");
+  statusServer?.close();
   dedup.close();
   process.exit(0);
 });
 process.on("SIGTERM", () => {
   logger.info("MAIN", "Shutting down...");
+  statusServer?.close();
   dedup.close();
   process.exit(0);
 });
@@ -354,6 +378,7 @@ process.on("unhandledRejection", (reason) => {
 });
 process.on("uncaughtException", (err) => {
   logger.error("MAIN", "Uncaught exception, shutting down", { error: err });
+  statusServer?.close();
   dedup.close();
   process.exit(1);
 });

@@ -39,6 +39,12 @@ bsaf-jma-bot は気象庁の公開XMLフィードを監視し、防災情報をB
 | **P3** | 震度3-4、気象警報、竜巻注意情報、記録的大雨 |
 | **P4** | 震度1-2、降灰予報 |
 
+## ステータスダッシュボード
+
+Botの稼働状況は[ステータスダッシュボード](https://osprey74.github.io/bsaf-jma-bot/status/)で確認できます。
+
+Fly.io上の `/health` `/status` エンドポイントにより、稼働時間・ポーリング回数・災害種別ごとの投稿数・直近のイベントを監視できます。
+
 ## アーキテクチャ
 
 ```
@@ -48,6 +54,11 @@ bsaf-jma-bot は気象庁の公開XMLフィードを監視し、防災情報をB
 Poller → Dispatcher → Parser → Formatter → Priority Sort → Bluesky API
                                                 │
                                           DedupStore (SQLite)
+                                          StatusStore (メモリ)
+                                                │
+                                      /health, /status (HTTP :8080)
+                                                │
+                                      GitHub Pages ダッシュボード
 ```
 
 ## 技術スタック
@@ -91,6 +102,7 @@ BLUESKY_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
 | `POLL_INTERVAL_MS` | `45000` | フィードポーリング間隔（ミリ秒） |
 | `DATA_DIR` | `./data` | SQLite DB・セッション用データディレクトリ |
 | `LOG_LEVEL` | `INFO` | ログレベル（`DEBUG`, `INFO`, `WARN`, `ERROR`） |
+| `STATUS_PORT` | `8080` | ヘルス/ステータスエンドポイントのHTTPポート |
 
 ### 実行
 

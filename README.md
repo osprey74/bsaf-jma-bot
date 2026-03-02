@@ -39,6 +39,12 @@ Posts are sorted by priority before posting. P0 events bypass the minimum postin
 | **P3** | Earthquake intensity 3-4, weather warning, tornado, record heavy rain |
 | **P4** | Earthquake intensity 1-2, ashfall forecast |
 
+## Status Dashboard
+
+Live bot status is available at the [Status Dashboard](https://osprey74.github.io/bsaf-jma-bot/status/).
+
+The bot exposes `/health` and `/status` endpoints on Fly.io for monitoring uptime, poll counts, post counts by disaster type, and recent events.
+
 ## Architecture
 
 ```
@@ -48,6 +54,11 @@ JMA XML Feeds (eqvol.xml, extra.xml)
 Poller → Dispatcher → Parser → Formatter → Priority Sort → Bluesky API
                                                 │
                                           DedupStore (SQLite)
+                                          StatusStore (in-memory)
+                                                │
+                                      /health, /status (HTTP :8080)
+                                                │
+                                      GitHub Pages Dashboard
 ```
 
 ## Tech Stack
@@ -91,6 +102,7 @@ Optional environment variables:
 | `POLL_INTERVAL_MS` | `45000` | Feed polling interval (ms) |
 | `DATA_DIR` | `./data` | Data directory for SQLite DB and session |
 | `LOG_LEVEL` | `INFO` | Log level (`DEBUG`, `INFO`, `WARN`, `ERROR`) |
+| `STATUS_PORT` | `8080` | HTTP port for health/status endpoints |
 
 ### Run
 
