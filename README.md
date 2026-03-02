@@ -126,7 +126,7 @@ See [bot-definition.json](bot-definition.json) for all available filter options.
 
 ## Data Source
 
-All data is sourced from [JMA's public XML feed service](https://www.data.jma.go.jp/developer/xml/feed/). This bot is unofficial and not affiliated with or endorsed by JMA.
+All data is sourced from [JMA's public XML feed service](https://xml.kishou.go.jp/xmlpull.html). This bot is unofficial and not affiliated with or endorsed by JMA.
 
 ## Related Projects
 

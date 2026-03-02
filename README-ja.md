@@ -126,7 +126,7 @@ bsaf:v1, type:earthquake, value:5+, time:2026-02-15T02:52:00Z, target:jp-kanto, 
 
 ## データソース
 
-すべてのデータは[気象庁の防災情報XML](https://www.data.jma.go.jp/developer/xml/feed/)を出典としています。本Botは非公式であり、気象庁とは無関係です。
+すべてのデータは[気象庁の防災情報XML](https://xml.kishou.go.jp/xmlpull.html)を出典としています。本Botは非公式であり、気象庁とは無関係です。
 
 ## 関連プロジェクト
 
