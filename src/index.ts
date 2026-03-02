@@ -299,17 +299,25 @@ async function main(): Promise<void> {
   logger.info("MAIN", `Data dir: ${config.dataDir}`);
   logger.info("MAIN", "Feeds: eqvol.xml, extra.xml (+long-term catchup)");
 
-  // Validate credentials by connecting early (with retry for transient errors)
-  const MAX_RETRIES = 5;
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+  // Validate credentials by connecting early (retry indefinitely with backoff)
+  for (let attempt = 1; ; attempt++) {
     try {
       await getAgent();
       break;
     } catch (err) {
-      if (attempt === MAX_RETRIES) throw err;
-      const delay = Math.min(30_000, 5_000 * 2 ** (attempt - 1)); // 5s, 10s, 20s, 30s
-      logger.warn("MAIN", `Login attempt ${attempt}/${MAX_RETRIES} failed, retrying in ${delay / 1000}s`, { error: err });
-      await sleep(delay);
+      const msg = err instanceof Error ? err.message : String(err);
+      const isRateLimit = msg.includes("Rate Limit") || msg.includes("rate limit") || msg.includes("429");
+      // Rate limit: long backoff (60–300s). Other errors: shorter backoff (5–60s), give up after 10 attempts.
+      if (isRateLimit) {
+        const delay = Math.min(300_000, 60_000 * 2 ** Math.min(attempt - 1, 2)); // 60s, 120s, 300s
+        logger.warn("MAIN", `Login attempt ${attempt} rate-limited, waiting ${delay / 1000}s before retry`, { error: err });
+        await sleep(delay);
+      } else {
+        if (attempt >= 10) throw err;
+        const delay = Math.min(60_000, 5_000 * 2 ** (attempt - 1)); // 5s, 10s, 20s, 40s, 60s
+        logger.warn("MAIN", `Login attempt ${attempt}/10 failed, retrying in ${delay / 1000}s`, { error: err });
+        await sleep(delay);
+      }
     }
   }
 
@@ -338,6 +346,16 @@ process.on("SIGTERM", () => {
   logger.info("MAIN", "Shutting down...");
   dedup.close();
   process.exit(0);
+});
+
+// Catch unhandled errors to prevent silent crashes
+process.on("unhandledRejection", (reason) => {
+  logger.error("MAIN", "Unhandled rejection", { error: reason });
+});
+process.on("uncaughtException", (err) => {
+  logger.error("MAIN", "Uncaught exception, shutting down", { error: err });
+  dedup.close();
+  process.exit(1);
 });
 
 main().catch((err) => {

@@ -21,4 +21,9 @@ primary_region = 'nrt'
 [[vm]]
   cpu_kind = 'shared'
   cpus = 1
-  memory_mb = 256
+  memory_mb = 512
+
+# Restart policy: limit retries to avoid rate-limit amplification
+[[restart]]
+  policy = 'on-failure'
+  retries = 5
