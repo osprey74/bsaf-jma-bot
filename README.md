@@ -41,9 +41,9 @@ Posts are sorted by priority before posting. P0 events bypass the minimum postin
 
 ## Status Dashboard
 
-Live bot status is available at the [Status Dashboard](https://osprey74.github.io/bsaf-jma-bot/status/).
-
-The bot exposes `/health` and `/status` endpoints on Fly.io for monitoring uptime, poll counts, post counts by disaster type, and recent events.
+- [Dashboard](https://osprey74.github.io/bsaf-jma-bot/status/) — Live bot status page
+- [Health Check](https://bsaf-jma-bot.fly.dev/health) — Simple OK/error endpoint
+- [Status API](https://bsaf-jma-bot.fly.dev/status) — Full JSON status snapshot
 
 ## Architecture
 

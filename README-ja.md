@@ -41,9 +41,9 @@ bsaf-jma-bot は気象庁の公開XMLフィードを監視し、防災情報をB
 
 ## ステータスダッシュボード
 
-Botの稼働状況は[ステータスダッシュボード](https://osprey74.github.io/bsaf-jma-bot/status/)で確認できます。
-
-Fly.io上の `/health` `/status` エンドポイントにより、稼働時間・ポーリング回数・災害種別ごとの投稿数・直近のイベントを監視できます。
+- [ダッシュボード](https://osprey74.github.io/bsaf-jma-bot/status/) — Bot稼働状況ページ
+- [ヘルスチェック](https://bsaf-jma-bot.fly.dev/health) — 正常/異常の簡易エンドポイント
+- [ステータスAPI](https://bsaf-jma-bot.fly.dev/status) — 詳細JSONスナップショット
 
 ## アーキテクチャ
 
