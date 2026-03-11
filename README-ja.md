@@ -145,6 +145,12 @@ bsaf:v1, type:earthquake, value:5+, time:2026-02-15T02:52:00Z, target:jp-kanto, 
 - [BSAFプロトコル](https://github.com/osprey74/bsaf-protocol) — プロトコル仕様書
 - [kazahana](https://github.com/osprey74/kazahana) — BSAF対応 Blueskyデスクトップクライアント
 
+## サポート
+
+このプロジェクトが役に立ったら、開発を支援していただけると嬉しいです：
+
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-ff5e5b?logo=ko-fi)](https://ko-fi.com/osprey74)
+
 ## ライセンス
 
 [MIT License](LICENSE)

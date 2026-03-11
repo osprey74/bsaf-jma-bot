@@ -145,6 +145,12 @@ All data is sourced from [JMA's public XML feed service](https://xml.kishou.go.j
 - [BSAF Protocol](https://github.com/osprey74/bsaf-protocol) — The protocol specification
 - [kazahana](https://github.com/osprey74/kazahana) — Bluesky desktop client with BSAF support
 
+## Support
+
+If you find this project useful, consider supporting its development:
+
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support-ff5e5b?logo=ko-fi)](https://ko-fi.com/osprey74)
+
 ## License
 
 [MIT License](LICENSE)
