@@ -136,6 +136,18 @@ bsaf:v1, type:earthquake, value:5+, time:2026-02-15T02:52:00Z, target:jp-kanto, 
 
 利用可能なフィルタオプションは [bot-definition.json](bot-definition.json) を参照してください。
 
+## Bot定義ファイル
+
+[bot-definition.json](bot-definition.json) は、このBotの情報と対応フィルタを記述した機械可読なJSONファイルです。BSAF対応クライアント（[kazahana](https://github.com/osprey74/kazahana) など）にこのファイルを登録することで、Botの投稿に対するフィルタリング機能が有効になります。
+
+クライアントの管理画面で `bot-definition.json` を登録すると、災害種別（地震・津波など）・重要度・地域によるフィルタUIが自動的に構築され、ユーザーは手動設定なしで必要な防災情報だけを受け取ることができます。
+
+ファイルは以下のURLでホストされています:
+
+```
+https://raw.githubusercontent.com/osprey74/bsaf-jma-bot/main/bot-definition.json
+```
+
 ## データソース
 
 すべてのデータは[気象庁の防災情報XML](https://xml.kishou.go.jp/xmlpull.html)を出典としています。本Botは非公式であり、気象庁とは無関係です。

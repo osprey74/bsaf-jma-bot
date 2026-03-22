@@ -136,6 +136,18 @@ bsaf:v1, type:earthquake, value:5+, time:2026-02-15T02:52:00Z, target:jp-kanto, 
 
 See [bot-definition.json](bot-definition.json) for all available filter options.
 
+## Bot Definition
+
+[bot-definition.json](bot-definition.json) is a machine-readable JSON file that describes this bot's identity and the filters it supports. BSAF-compatible clients (such as [kazahana](https://github.com/osprey74/kazahana)) use this file to register BSAF bots.
+
+By registering `bot-definition.json` in a client's management screen, the client can automatically build filter UIs for the bot's posts — enabling users to filter disaster alerts by type (earthquake, tsunami, etc.), severity, and region without any manual configuration.
+
+The file is hosted at:
+
+```
+https://raw.githubusercontent.com/osprey74/bsaf-jma-bot/main/bot-definition.json
+```
+
 ## Data Source
 
 All data is sourced from [JMA's public XML feed service](https://xml.kishou.go.jp/xmlpull.html). This bot is unofficial and not affiliated with or endorsed by JMA.
