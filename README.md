@@ -140,13 +140,40 @@ See [bot-definition.json](bot-definition.json) for all available filter options.
 
 [bot-definition.json](bot-definition.json) is a machine-readable JSON file that describes this bot's identity and the filters it supports. BSAF-compatible clients (such as [kazahana](https://github.com/osprey74/kazahana)) use this file to register BSAF bots.
 
-By registering `bot-definition.json` in a client's management screen, the client can automatically build filter UIs for the bot's posts — enabling users to filter disaster alerts by type (earthquake, tsunami, etc.), severity, and region without any manual configuration.
+### Hosted URL
 
-The file is hosted at:
+The file is hosted at the following URL. Use this URL when registering the bot in a client:
 
 ```
 https://raw.githubusercontent.com/osprey74/bsaf-jma-bot/main/bot-definition.json
 ```
+
+### Usage
+
+1. Open the bot management screen in a BSAF-compatible client (e.g., kazahana)
+2. Enter the URL above to register the bot
+3. The client fetches `bot-definition.json` and automatically builds a filter UI
+4. Configure filters by disaster type, severity, and region to receive only the alerts you need
+
+### File Structure
+
+| Field | Description |
+|:------|:-----------|
+| `bsaf_schema` | BSAF schema version (`"1.0"`) |
+| `updated_at` | Last update timestamp (ISO 8601) |
+| `self_url` | Hosted URL of this file |
+| `bot` | Bot identity (handle, DID, name, description, data source) |
+| `filters` | Array of supported filters |
+
+The `filters` array defines three filter types:
+
+| Filter (`tag`) | Label | Options |
+|:---------------|:------|:--------|
+| `type` | Disaster type | earthquake, tsunami, eruption, ashfall, nankai-trough, special-warning, weather-warning, landslide-warning, tornado-warning, heavy-rain |
+| `value` | Severity | Seismic intensity 1–7, info, advisory, warning, severe-warning, special-warning |
+| `target` | Region | hokkaido, tohoku, kanto, hokuriku, chubu, kinki, chugoku, shikoku, kyushu, okinawa |
+
+Each filter's `options` contains `value` (BSAF tag value) and `label` (display name) pairs, which clients use to build the filter UI.
 
 ## Data Source
 
