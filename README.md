@@ -14,6 +14,8 @@ This is the reference bot implementation for the [BSAF protocol](https://github.
 
 ## Supported Disaster Types
 
+This bot covers earthquake / volcano / tsunami (geophysical & marine) disaster information. Meteorological information — weather warnings & advisories, sediment disaster, tornadoes, heavy rain — is handled by [bsaf-kikikuru-bot](https://github.com/osprey74/bsaf-kikikuru-bot) (see role division below).
+
 | Type | Source Feed | Data Source |
 |:-----|:-----------|:-----------|
 | Earthquake | eqvol.xml | Detail XML |
@@ -21,11 +23,6 @@ This is the reference bot implementation for the [BSAF protocol](https://github.
 | Volcanic Eruption | eqvol.xml | Detail XML |
 | Ashfall Forecast | eqvol.xml | Entry content |
 | Nankai Trough Advisory | eqvol.xml | Detail XML |
-| Special Weather Warning | extra.xml | Detail XML |
-| Weather Warning | extra.xml | Detail XML / Entry content |
-| Landslide Warning | extra.xml | Entry content |
-| Tornado Warning | extra.xml | Entry content |
-| Record Heavy Rain | extra.xml | Entry content |
 
 ## Priority System
 
@@ -34,9 +31,9 @@ Posts are sorted by priority before posting. P0 events bypass the minimum postin
 | Priority | Events |
 |:---------|:-------|
 | **P0** | Major tsunami warning, Nankai Trough advisory |
-| **P1** | Tsunami warning/advisory, special warning, volcanic eruption |
-| **P2** | Earthquake intensity 5+, landslide warning |
-| **P3** | Earthquake intensity 3-4, weather warning, tornado, record heavy rain |
+| **P1** | Tsunami warning/advisory, volcanic eruption |
+| **P2** | Earthquake intensity 5+ |
+| **P3** | Earthquake intensity 3-4 |
 | **P4** | Earthquake intensity 1-2, ashfall forecast |
 
 ## Status Dashboard
@@ -169,7 +166,7 @@ The `filters` array defines three filter types:
 
 | Filter (`tag`) | Label | Options |
 |:---------------|:------|:--------|
-| `type` | Disaster type | earthquake, tsunami, eruption, ashfall, nankai-trough, special-warning, weather-warning, landslide-warning, tornado-warning, heavy-rain |
+| `type` | Disaster type | earthquake, tsunami, eruption, ashfall, nankai-trough |
 | `value` | Severity | Seismic intensity 1–7, info, advisory, warning, severe-warning, special-warning |
 | `target` | Region | hokkaido, tohoku, kanto, hokuriku, chubu, kinki, chugoku, shikoku, kyushu, okinawa |
 

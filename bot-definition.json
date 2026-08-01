@@ -21,12 +21,7 @@
         { "value": "tsunami", "label": "津波" },
         { "value": "eruption", "label": "噴火" },
         { "value": "ashfall", "label": "降灰" },
-        { "value": "nankai-trough", "label": "南海トラフ臨時" },
-        { "value": "special-warning", "label": "特別警報" },
-        { "value": "weather-warning", "label": "気象警報" },
-        { "value": "landslide-warning", "label": "土砂災害" },
-        { "value": "tornado-warning", "label": "竜巻注意" },
-        { "value": "heavy-rain", "label": "記録的大雨" }
+        { "value": "nankai-trough", "label": "南海トラフ臨時" }
       ]
     },
     {

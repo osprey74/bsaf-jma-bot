@@ -11,22 +11,12 @@ import { parseTsunamiXml } from "./parser/tsunami.js";
 import { parseEruptionXml } from "./parser/eruption.js";
 import { parseAshfallContent } from "./parser/ashfall.js";
 import { parseNankaiTroughXml } from "./parser/nankai-trough.js";
-import { parseSpecialWarningXml } from "./parser/special-warning.js";
-import { parseWeatherWarningXml, parseWeatherWarningContent } from "./parser/weather-warning.js";
-import { parseLandslideWarningContent } from "./parser/landslide-warning.js";
-import { parseTornadoWarningContent } from "./parser/tornado-warning.js";
-import { parseHeavyRainContent } from "./parser/heavy-rain.js";
 import {
   formatEarthquakePost,
   formatTsunamiPost,
   formatEruptionPost,
   formatAshfallPost,
   formatNankaiTroughPost,
-  formatSpecialWarningPost,
-  formatWeatherWarningPost,
-  formatLandslideWarningPost,
-  formatTornadoWarningPost,
-  formatHeavyRainPost,
 } from "./poster/formatter.js";
 import { determinePriority } from "./poster/priority.js";
 import { config } from "./config.js";
@@ -66,40 +56,6 @@ async function processEntry(entry: FeedEntry): Promise<BsafPost | null> {
       const info = parseNankaiTroughXml(xml);
       if (!info) return null;
       return formatNankaiTroughPost(info);
-    }
-    case "special-warning": {
-      const xml = await fetchDetailXml(entry.linkHref);
-      if (!xml) return null;
-      const info = parseSpecialWarningXml(xml);
-      if (!info) return null;
-      return formatSpecialWarningPost(info);
-    }
-    case "weather-warning": {
-      if (entry.needsDetailXml) {
-        const xml = await fetchDetailXml(entry.linkHref);
-        if (!xml) return null;
-        const info = parseWeatherWarningXml(xml);
-        if (!info) return null;
-        return formatWeatherWarningPost(info);
-      }
-      const info = parseWeatherWarningContent(entry.content, entry.title, entry.updated);
-      if (!info) return null;
-      return formatWeatherWarningPost(info);
-    }
-    case "landslide-warning": {
-      const info = parseLandslideWarningContent(entry.content, entry.title, entry.updated);
-      if (!info) return null;
-      return formatLandslideWarningPost(info);
-    }
-    case "tornado-warning": {
-      const info = parseTornadoWarningContent(entry.content, entry.title, entry.updated);
-      if (!info) return null;
-      return formatTornadoWarningPost(info);
-    }
-    case "heavy-rain": {
-      const info = parseHeavyRainContent(entry.content, entry.title, entry.updated);
-      if (!info) return null;
-      return formatHeavyRainPost(info);
     }
     default:
       return null;

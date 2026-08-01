@@ -47,22 +47,6 @@ const TITLE_PATTERNS: ReadonlyArray<{
 
   // -- Nankai Trough (eqvol.xml) --
   { pattern: /南海トラフ/, type: "nankai-trough", needsDetailXml: true },
-
-  // -- Landslide (extra.xml) -- must precede general weather patterns
-  { pattern: /土砂災害警戒情報/, type: "landslide-warning", needsDetailXml: false },
-
-  // -- Tornado (extra.xml) --
-  { pattern: /竜巻注意情報/, type: "tornado-warning", needsDetailXml: false },
-
-  // -- Record Heavy Rain (extra.xml) --
-  { pattern: /記録的短時間大雨情報/, type: "heavy-rain", needsDetailXml: false },
-
-  // -- Weather (extra.xml) --
-  // "気象特別警報・警報・注意報" is a combined telegram covering all severity levels.
-  // The actual severity (special-warning vs warning vs advisory) is determined by the parser.
-  { pattern: /気象特別警報・警報・注意報/, type: "weather-warning", needsDetailXml: true },
-  { pattern: /特別警報/, type: "special-warning", needsDetailXml: true },
-  { pattern: /気象警報|気象.*注意報/, type: "weather-warning", needsDetailXml: false },
 ];
 
 /** Match a feed entry title to a disaster type. Returns null if no match. */
