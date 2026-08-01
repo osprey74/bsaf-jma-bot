@@ -1,13 +1,13 @@
 {
   "bsaf_schema": "1.0",
-  "updated_at": "2026-02-28T00:00:00Z",
+  "updated_at": "2026-08-01T00:00:00Z",
   "self_url": "https://raw.githubusercontent.com/osprey74/bsaf-jma-bot/main/bot-definition.json",
 
   "bot": {
     "handle": "jma-alert-bot.bsky.social",
     "did": "did:plc:vwi7zhfyamyvrg5v6ycjgzxi",
-    "name": "防災情報Bot（非公式）",
-    "description": "気象庁の公開データに基づく防災情報",
+    "name": "気象庁 地震・火山・津波Bot（非公式）",
+    "description": "気象庁の防災情報XMLを自動配信するBot（非公式）。地震・津波・噴火・降灰予報・南海トラフ地震臨時情報など「地震・火山・津波」系の防災情報に専念します。気象警報・注意報や土砂災害・竜巻・大雨などの気象系情報は @bsaf-kikikuru-bot（気象防災情報Bot）が担当します。",
     "source": "気象庁 防災情報XML",
     "source_url": "https://www.data.jma.go.jp/developer/xml/feed/"
   },
