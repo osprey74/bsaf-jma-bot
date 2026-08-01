@@ -40,6 +40,7 @@ export function parseNankaiTroughXml(xml: string): NankaiTroughInfo | null {
       reportDateTime: String(head.ReportDateTime ?? ""),
       keyword,
       bodyText,
+      publishingOffice: String(report.Control?.PublishingOffice ?? ""),
     };
 
     logger.info("PARSE", `nankai-trough: ${keyword || "(no keyword)"}`);

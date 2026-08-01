@@ -71,6 +71,7 @@ export function parseSpecialWarningXml(xml: string): SpecialWarningInfo | null {
       reportDateTime,
       warningKinds: [...kindNameSet],
       prefCodes: [...prefCodeSet],
+      publishingOffice: extractText(report.Control?.PublishingOffice),
     };
 
     logger.info("PARSE", `special-warning: ${[...kindNameSet].join(", ")} (${prefCodeSet.size} prefs)`);

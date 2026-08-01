@@ -62,6 +62,8 @@ export interface TsunamiInfo {
   reportDateTime: string;
   /** Per-area forecast details (only active warnings, excludes 解除/津波なし) */
   areas: TsunamiAreaDetail[];
+  /** Publishing office (発表官署). Empty if unknown. */
+  publishingOffice: string;
 }
 
 /** Parsed eruption/volcanic alert information from VFVO50/52/56. */
@@ -80,6 +82,8 @@ export interface EruptionInfo {
   warningKind: string;
   /** Municipality codes (6-digit) for target region mapping */
   municipalityCodes: string[];
+  /** Publishing office (発表官署). Empty if unknown. */
+  publishingOffice: string;
 }
 
 /** Parsed ashfall forecast information from feed entry content. */
@@ -105,6 +109,8 @@ export interface NankaiTroughInfo {
   keyword: string;
   /** Main body text */
   bodyText: string;
+  /** Publishing office (発表官署). Empty if unknown. */
+  publishingOffice: string;
 }
 
 // ---- Step 3 types (extra.xml) ----
@@ -119,6 +125,8 @@ export interface SpecialWarningInfo {
   warningKinds: string[];
   /** JMA prefecture codes (2-digit) derived from area codes */
   prefCodes: string[];
+  /** Publishing office (発表官署). Empty if unknown. */
+  publishingOffice: string;
 }
 
 /** Parsed weather warning/advisory information from VPWW53/54 or content. */
@@ -133,8 +141,10 @@ export interface WeatherWarningInfo {
   warningKinds: string[];
   /** JMA prefecture codes (2-digit) — from XML area codes */
   prefCodes: string[];
-  /** Prefecture name — from content text */
+  /** Prefecture name — from content text or XML Head/Title */
   prefName: string;
+  /** Publishing office (発表官署) — e.g. "秋田地方気象台". Empty if unknown. */
+  publishingOffice: string;
 }
 
 /** Parsed landslide warning information from feed entry content. */

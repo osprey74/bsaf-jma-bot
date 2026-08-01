@@ -78,6 +78,7 @@ export function parseTsunamiXml(xml: string): TsunamiInfo | null {
       timeUtc,
       reportDateTime: String(head.ReportDateTime ?? ""),
       areas,
+      publishingOffice: String(report.Control?.PublishingOffice ?? ""),
     };
 
     const maxKind = areas.reduce(

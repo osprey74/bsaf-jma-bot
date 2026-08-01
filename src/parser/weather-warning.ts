@@ -50,6 +50,10 @@ export function parseWeatherWarningXml(xml: string): WeatherWarningInfo | null {
     const reportDateTime = toUtcIso(String(head.ReportDateTime ?? ""));
     const title = extractText(head.Title);
     const headline = extractText(head.Headline?.Text);
+    // 発表官署 (e.g. "秋田地方気象台") lives in Control, not Head.
+    const publishingOffice = extractText(report.Control?.PublishingOffice);
+    // Head/Title is prefecture-scoped (e.g. "秋田県気象警報・注意報") — extract the pref name.
+    const prefName = title.match(/^(.+?)気象/)?.[1]?.trim() ?? "";
 
     const warnings = toArray(body.Warning);
     const prefCodeSet = new Set<string>();
@@ -105,10 +109,11 @@ export function parseWeatherWarningXml(xml: string): WeatherWarningInfo | null {
       highestLevel,
       warningKinds: [...warningKindNames],
       prefCodes: [...prefCodeSet],
-      prefName: "",
+      prefName,
+      publishingOffice,
     };
 
-    logger.info("PARSE", `weather-warning (XML): ${highestLevel}, ${[...warningKindNames].join(", ")}`);
+    logger.info("PARSE", `weather-warning (XML): ${prefName || "?"} ${highestLevel}, ${[...warningKindNames].join(", ")}`);
     return info;
   } catch (err) {
     logger.error("PARSE", "Failed to parse weather warning XML", { error: err });
@@ -172,6 +177,7 @@ export function parseWeatherWarningContent(
       warningKinds: [],
       prefCodes: [],
       prefName,
+      publishingOffice: "",
     };
 
     logger.info("PARSE", `weather-warning (content): ${prefName}, ${highestLevel}`);

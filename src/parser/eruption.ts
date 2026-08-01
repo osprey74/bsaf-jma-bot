@@ -79,6 +79,7 @@ export function parseEruptionXml(xml: string): EruptionInfo | null {
       alertLevel,
       warningKind,
       municipalityCodes,
+      publishingOffice: String(report.Control?.PublishingOffice ?? ""),
     };
 
     logger.info("PARSE", `eruption: ${volcanoName} level=${alertLevel} ${warningKind}`);

@@ -27,6 +27,17 @@ function getEmojiForValue(value: string): string {
   return "🟡";
 }
 
+/**
+ * Source attribution line, optionally citing the issuing office (発表官署).
+ * Collapses to plain "（出典：気象庁）" when the office is unknown or is the
+ * JMA head office itself (avoids redundant "気象庁／気象庁").
+ */
+function sourceLine(office?: string): string {
+  const o = office?.trim();
+  if (!o || o === "気象庁") return `（出典：気象庁）`;
+  return `（出典：気象庁／${o}）`;
+}
+
 /** Format a JST ISO string to a display string like "25日18時41分" */
 function formatJstTime(isoStr: string): string {
   if (!isoStr) return "";
@@ -179,7 +190,7 @@ export function formatTsunamiPost(info: TsunamiInfo): BsafPost | null {
     lines.push(`予想される最大高さ：${maxHeight}`);
   }
 
-  lines.push(`（出典：気象庁）`);
+  lines.push(sourceLine(info.publishingOffice));
   const text = lines.join("\n");
 
   const tags = [
@@ -272,7 +283,7 @@ export function formatEruptionPost(info: EruptionInfo): BsafPost | null {
     lines.push(`${displayTime}発表`);
   }
 
-  lines.push(`（出典：気象庁）`);
+  lines.push(sourceLine(info.publishingOffice));
   const text = lines.join("\n");
 
   const tags = [
@@ -372,7 +383,7 @@ export function formatNankaiTroughPost(info: NankaiTroughInfo): BsafPost | null 
     `${displayTime}発表`,
   ];
   if (bodyText) lines.push(bodyText);
-  lines.push(`（出典：気象庁）`);
+  lines.push(sourceLine(info.publishingOffice));
 
   const text = lines.join("\n");
 
@@ -402,7 +413,7 @@ export function formatSpecialWarningPost(info: SpecialWarningInfo): BsafPost | n
     `${emoji} 【特別警報】${kindsStr}`,
     `${displayTime}発表`,
     `命を守る行動をとってください`,
-    `（出典：気象庁）`,
+    sourceLine(info.publishingOffice),
   ].join("\n");
 
   const tags = [
@@ -450,7 +461,8 @@ export function formatWeatherWarningPost(info: WeatherWarningInfo): BsafPost | n
 
   lines.push(`${displayTime}発表`);
 
-  // Add content summary if available
+  // Add content summary if available, prefixed with the prefecture name so the
+  // affected region is clear (the JMA headline text alone says e.g. just "沿岸").
   if (info.content) {
     let contentText = info.content
       .replace(/【.*?】\s*/, "")
@@ -459,10 +471,16 @@ export function formatWeatherWarningPost(info: WeatherWarningInfo): BsafPost | n
     if ([...contentText].length > maxContentLen) {
       contentText = [...contentText].slice(0, maxContentLen).join("") + "…";
     }
-    if (contentText) lines.push(contentText);
+    if (contentText) {
+      const prefix =
+        info.prefName && !contentText.startsWith("【")
+          ? `【${info.prefName}】`
+          : "";
+      lines.push(`${prefix}${contentText}`);
+    }
   }
 
-  lines.push(`（出典：気象庁）`);
+  lines.push(sourceLine(info.publishingOffice));
   const text = lines.join("\n");
 
   const tags = [
